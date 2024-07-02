@@ -23,3 +23,20 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+const path = require('path');
+
+Cypress.Commands.add('customDownloadFile', (url, dir) => {
+    cy.request({
+        url,
+        encoding: 'binary'
+    }).then((response) => {
+        const disposition = response.headers['content-disposition'];
+        const fileName = disposition ? disposition.split('filename=')[1].split(';')[0].replace(/"/g, '') : 'downloaded-file';
+
+        const filePath = path.join(dir, fileName);
+
+        cy.writeFile(filePath, response.body, 'binary').then(() => {
+            cy.wrap(filePath).as('customDownloadedFile');  // Set the alias here
+        });
+    });
+});
